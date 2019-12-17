@@ -11,7 +11,7 @@ mutagen == 1.29
 pyDes == 2.0.1
 
 # saavn-dl.py: 2
-requests == 2.5.1
+requests == 2.20.0
 
 # saavn-dl.py: 5
 terminaltables == 1.1.1
