@@ -6,8 +6,8 @@ from terminaltables import AsciiTable
 from mutagen.mp4 import MP4
 from mutagen.mp4 import MP4Cover
 import urllib2 as urllib
-from mutagen.mp3 import  EasyMP3 
-from mutagen.mp3 import  MP3 
+from mutagen.mp3 import  EasyMP3
+from mutagen.mp3 import  MP3
 from mutagen.easyid3 import EasyID3
 from mutagen.id3 import ID3, APIC, error
 from pyDes import *
@@ -20,9 +20,9 @@ class BadHTTPCodeError(Exception):
 class SaavnDownloader():
     def __init__(self):
         self.urls = {
-            'search_songs_new' : 'http://www.saavn.com/api.php?__call=search.getResults&p=1&n=10&ctx=android&_format=json&_marker=0&q={query}',
-            'search_albums_new' : 'http://www.saavn.com/api.php?__call=search.getAlbumResults&p=1&n=20&ctx=android&_format=json&_marker=0&q={query}',
-            'search_playlist_new' : 'http://www.saavn.com/api.php?__call=search.getPlaylistResults&_marker=0&ctx=android&_format=json&q={query}',
+            'search_songs_new' : 'http://www.saavn.com/api.php?__call=search.getResults&p=1&n=10&_format=json&_marker=0&q={query}',
+            'search_albums_new' : 'http://www.saavn.com/api.php?__call=search.getAlbumResults&p=1&n=20&_format=json&_marker=0&q={query}',
+            'search_playlist_new' : 'http://www.saavn.com/api.php?__call=search.getPlaylistResults&_marker=0&_format=json&q={query}',
             'album_details' : 'http://www.saavn.com/api.php?__call=content.getAlbumDetails&_marker=0&_format=json&albumid={album_id}',
             'playlist_details' : 'http://www.saavn.com/api.php?__call=playlist.getDetails&_marker=0&_format=json&listid={playlist_id}'
         }
@@ -35,7 +35,7 @@ class SaavnDownloader():
         else:
             raise BadHTTPCodeError(response.status_code)
 
-    
+
     def _get_song_url(self, high_quality, encrypted_media_url):
         from base64 import b64decode as dec
         des_cipher = des(b"38346591", ECB, b"\0\0\0\0\0\0\0\0" , pad=None, padmode=PAD_PKCS5)
@@ -44,7 +44,7 @@ class SaavnDownloader():
             song_url=song_url.replace("_96.","_320.")
         else:
             song_url=song_url.replace("_96.","_160.")
-            
+
 #        print song_url
         return song_url
 
@@ -63,11 +63,11 @@ class SaavnDownloader():
         #    f.write(response.content)
 	r = requests.get(song_url, stream=True)
 	with open(file_path, 'wb') as f:
-		for chunk in r.iter_content(chunk_size=1024): 
+		for chunk in r.iter_content(chunk_size=1024):
 			if chunk:
 				f.write(chunk)
 				f.flush()
-	
+
         if '.m4a' in track_name:
             self._update_metadata_mp4(file_path,metadata)
         else :
@@ -76,7 +76,7 @@ class SaavnDownloader():
 
     def _update_metadata_mp4(self,file_path,metadata):
          # print 'updating metadata'
-            
+
          audio = MP4(file_path)
 #         print metadata
          cover = metadata[5].decode('utf8')
@@ -88,24 +88,24 @@ class SaavnDownloader():
         ))
          fd.close() # always a good thing to do
          audio['covr'] = [covr] # make sure it's a list
-         audio["\xa9nam" ] = metadata[0]# name 
-         audio["\xa9ART" ] = metadata[4]# artist 
-         audio["\xa9alb" ] = metadata[3]# album 
+         audio["\xa9nam" ] = metadata[0]# name
+         audio["\xa9ART" ] = metadata[4]# artist
+         audio["\xa9alb" ] = metadata[3]# album
          audio.save()
 
 
 
-  
-    
+
+
     def _update_metadata_mp3(self,file_path,metadata):
          # print 'Updating metadata of ' + file_path
          audio = MP3(file_path)
-         
+
          try:
             audio.add_tags()
          except error :
             pass
-         cover = metadata[5].decode('utf8') 
+         cover = metadata[5].decode('utf8')
          fd = urllib.urlopen(cover)
          audio.tags.add(
             APIC(
@@ -121,18 +121,18 @@ class SaavnDownloader():
          fd.close() # always a good thing to do
          audio.save()
          audio = EasyMP3(file_path)
-	 audio["title" ] = metadata[0]# name 
-         audio["artist" ] = metadata[4]# artist 
-         audio["album" ] = metadata[3]# album 
+	 audio["title" ] = metadata[0]# name
+         audio["artist" ] = metadata[4]# artist
+         audio["album" ] = metadata[3]# album
          audio.save()
 
 
 
 
     def _get_file_name(self, _name):
-        return _name.decode('utf8').replace(" ","_")
-        
-        
+        return _name.strip().replace(" ","_")
+
+
     def _check_path(self, _dir):
         import os
         if not os.path.exists(_dir):
@@ -155,7 +155,7 @@ class SaavnDownloader():
         response = self._get_url_contents(url)
         tracks = response.json()['results']
 #        print tracks
-        
+
         if tracks:
             tracks_x = filter(lambda k: ('encrypted_media_url' in k) ,tracks)
             tracks_list = map(lambda x:[x['song'],x['id'],x['albumid'],x['album'],x['singers'],x['image'],x['encrypted_media_url'],x['320kbps']], tracks_x)
@@ -225,7 +225,7 @@ class SaavnDownloader():
         else:
             print 'Ooopsss!!! Sorry no such album found.'
             print 'Why not try another Album? :)'
-            
+
 
     def search_playlist(self, query, _dir = None):
         from pprint import pprint
@@ -262,7 +262,7 @@ class SaavnDownloader():
                 print 'Oops!! You made some error in entering input'
                 ids = raw_input('Please enter csv of S no. to download:')
             if not _dir:
-                _dir = "_".join(pl_list[idx][1].split()) 
+                _dir = "_".join(pl_list[idx][1].split())
             self._check_path(_dir)
             ids = map(int,map(lambda x:x.strip(),ids.split(',')))
             if len(ids) == 1 and ids[0] == idy + 1:
