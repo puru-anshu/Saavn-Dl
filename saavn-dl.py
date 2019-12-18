@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/python
 import requests, re, sys, os
 import argparse
 from bs4 import BeautifulSoup
@@ -18,6 +18,8 @@ class BadHTTPCodeError(Exception):
         print(code)
 
 class SaavnDownloader():
+
+
     def __init__(self):
         self.urls = {
             'search_songs_new' : 'http://www.saavn.com/api.php?__call=search.getResults&p=1&n=10&_format=json&_marker=0&q={query}',
@@ -48,7 +50,19 @@ class SaavnDownloader():
 #        print song_url
         return song_url
 
+    def _html_decode(self,s):
+        htmlCodes = (
+            ("'", '&#39;'),
+            ('"', '&quot;'),
+            ('>', '&gt;'),
+            ('<', '&lt;'),
+            ('&', '&amp;')
+        )
+        for code in htmlCodes:
+            s = s.replace(code[1], code[0])
+        return s
     def _download_track(self, song_url, track_name, dir_name,metadata):
+        track_name = self._html_decode(track_name)
         if '.mp4' in song_url:
             track_name = track_name + '.m4a'
         else:
